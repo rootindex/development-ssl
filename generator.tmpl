@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+
+if [[ ! -f /app/ssl/root/ca.key ]]; then
+    echo -e "Generating root authority, you provided none!";
+    openssl genrsa -des3 -passout pass:foobar -out /app/ssl/root/ca.key 2048
+    openssl req -x509 -new -nodes -key /app/ssl/root/ca.key -passin pass:foobar -subj '/CN=Development SSL/O=STT/C=ZA' -sha256 -days 3650 -out /app/ssl/root/ca.pem
+fi
+
+{{ range $host, $containers := groupBy $ "Env.VIRTUAL_HOST" }}
+
+if [[ ! -f /app/ssl/{{ $host }}.csr ]]; then
+    cat > /app/ssl/{{ $host }}.cnf <<-EOT
+[req]
+default_bits = 2048
+prompt = no
+default_md = sha256
+distinguished_name = dn
+
+[dn]
+C=ZA
+ST=Western Province
+L=Cape Town
+O=SIH
+OU=STT
+emailAddress=developer@{{ $host }}
+CN = {{ $host }}
+
+EOT
+
+    cat > /app/ssl/{{ $host }}.ext  <<-EOT
+authorityKeyIdentifier=keyid,issuer
+basicConstraints=CA:FALSE
+keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = admin.{{ $host }}
+DNS.2 = www.{{ $host }}
+
+EOT
+    openssl req -new -sha256 -nodes -out /app/ssl/{{ $host }}.csr -newkey rsa:2048 -keyout /app/ssl/{{ $host }}.key -config /app/ssl/{{ $host }}.cnf;
+    openssl x509 -req -in /app/ssl/{{ $host }}.csr -CA /app/ssl/root/ca.pem -CAkey /app/ssl/root/ca.key -CAcreateserial -passin pass:foobar -out /app/ssl/{{ $host }}.crt -days 3650 -sha256 -extfile /app/ssl/{{ $host }}.ext;
+fi
+
+{{ end }}
