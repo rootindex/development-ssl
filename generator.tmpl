@@ -8,8 +8,8 @@ fi
 
 {{ range $host, $containers := groupBy $ "Env.VIRTUAL_HOST" }}
 
-if [[ ! -f /app/ssl/{{ $host }}.csr ]]; then
-    cat > /app/ssl/{{ $host }}.cnf <<-EOT
+if [[ ! -f /app/ssl/out/{{ $host }}.csr ]]; then
+    cat > /app/ssl/out/{{ $host }}.cnf <<-EOT
 [req]
 default_bits = 2048
 prompt = no
@@ -18,16 +18,16 @@ distinguished_name = dn
 
 [dn]
 C=ZA
-ST=Western Province
+ST=WP
 L=Cape Town
-O=SIH
-OU=STT
+O=Stormers
+OU=Supporter
 emailAddress=developer@{{ $host }}
 CN = {{ $host }}
 
 EOT
 
-    cat > /app/ssl/{{ $host }}.ext  <<-EOT
+    cat > /app/ssl/out/{{ $host }}.ext  <<-EOT
 authorityKeyIdentifier=keyid,issuer
 basicConstraints=CA:FALSE
 keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
@@ -38,8 +38,8 @@ DNS.1 = admin.{{ $host }}
 DNS.2 = www.{{ $host }}
 
 EOT
-    openssl req -new -sha256 -nodes -out /app/ssl/{{ $host }}.csr -newkey rsa:2048 -keyout /app/ssl/{{ $host }}.key -config /app/ssl/{{ $host }}.cnf;
-    openssl x509 -req -in /app/ssl/{{ $host }}.csr -CA /app/ssl/root/ca.pem -CAkey /app/ssl/root/ca.key -CAcreateserial -passin pass:foobar -out /app/ssl/{{ $host }}.crt -days 3650 -sha256 -extfile /app/ssl/{{ $host }}.ext;
+    openssl req -new -sha256 -nodes -out /app/ssl/out/{{ $host }}.csr -newkey rsa:2048 -keyout /app/ssl/out/{{ $host }}.key -config /app/ssl/out/{{ $host }}.cnf;
+    openssl x509 -req -in /app/ssl/out/{{ $host }}.csr -CA /app/ssl/root/ca.pem -CAkey /app/ssl/root/ca.key -CAcreateserial -passin pass:foobar -out /app/ssl/out/{{ $host }}.crt -days 3650 -sha256 -extfile /app/ssl/out/{{ $host }}.ext;
 fi
 
 {{ end }}

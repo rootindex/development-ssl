@@ -3,7 +3,8 @@ FROM ubuntu:18.10
 RUN apt update
 RUN apt install -y wget libssl-dev bash openssl
 
-RUN mkdir /app
+RUN mkdir -p /app/ssl/root /app/ssl/out
+
 WORKDIR /app
 
 ENV DOCKER_GEN_VERSION 0.7.4

@@ -22,6 +22,10 @@ if [[ ! -d /app/ssl/root ]]; then
     mkdir /app/ssl/root
 fi
 
+if [[ ! -d /app/ssl/out ]]; then
+    mkdir /app/ssl/out
+fi
+
 /app/generate-dhparam.sh $DHPARAM_BITS
 
 # If the user has run the default command and the socket doesn't exist, fail
